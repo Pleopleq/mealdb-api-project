@@ -1,7 +1,6 @@
 const recipeBtn = document.querySelector('.recipeBtn')
 const recipeFeed = document.querySelector('.recipeFeed')
-const recipeListFragment = document.createDocumentFragment()
-const measureListFragment = document.createDocumentFragment()
+const recipeTip = document.querySelector('.recipeTip')
 const URL = "https://www.themealdb.com/api/json/v1/1/random.php"
 
 
@@ -37,60 +36,101 @@ const formatMeasures = (measure) => {
     return measuresArr
 }
 
+const formattedList = (items) => {
+    const listFragment = document.createDocumentFragment()
+    items.forEach(element => {
+        const singleElement = document.createElement('li')
+        
+        singleElement.textContent = element
+        listFragment.appendChild(singleElement)
+
+        if(singleElement.textContent === '' || singleElement.textContent === " "){
+            listFragment.removeChild(singleElement)
+        }
+    });
+    return listFragment
+}
+
 const showRecipe = (recipe) => {
     const div = document.createElement('div')
+    const itemList = document.createElement('div')
+    const links = document.createElement('div')
+
     const title = document.createElement('h2')
+    const thumbnail = document.createElement('img')
+    const category = document.createElement('p')
     const description = document.createElement('p')
     const ingredientsList = document.createElement('ul')
     const measureList = document.createElement('ul')
+    const youtube = document.createElement('a')
+    const source = document.createElement('a')
+    const youtubeIcon = document.createElement('img')
+    const sourceIcon = document.createElement('img')
 
-    const ingredientsArr = formatIngredients(recipe)
-    const measureArr = formatMeasures(recipe)
+    //Getting a document fragment of li elements to show it on the UI
 
-    ingredientsArr.forEach(element => {
-        const ingredientSingle = document.createElement('li')
+    const ingredientsArr = formattedList(formatIngredients(recipe))
+    const measureArr = formattedList(formatMeasures(recipe)) 
 
-        ingredientSingle.textContent = element
-        recipeListFragment.appendChild(ingredientSingle)
+    //Populate the content of the recipe in the UI
 
-        if(ingredientSingle.textContent === ''){
-            recipeListFragment.removeChild(ingredientSingle)
-        }
-    });
-
-    measureArr.forEach(element => {
-        const measureSingle = document.createElement('li')
-
-        measureSingle.textContent = element
-        measureListFragment.appendChild(measureSingle)
-
-        if(measureSingle.textContent === ''){
-            measureListFragment.removeChild(measureSingle)
-        }
-    });
-
-    ingredientsList.appendChild(recipeListFragment)
-    measureList.appendChild(measureListFragment)
     title.textContent = recipe.strMeal
+    thumbnail.src = recipe.strMealThumb
+    category.textContent = `Category: ${recipe.strCategory}`
     description.textContent = recipe.strInstructions
+
+    ingredientsList.appendChild(ingredientsArr)
+    measureList.appendChild(measureArr)
+    
+    itemList.appendChild(ingredientsList)
+    itemList.appendChild(measureList)
+
+    youtube.href = recipe.strYoutube
+    source.href = recipe.strSource
+    youtube.textContent = "Watch how to do it!"
+    source.textContent = "Go to the original recipe."
+
+    youtubeIcon.src = "./icons/youtube.svg"
+    youtube.appendChild(youtubeIcon)
+    links.appendChild(youtube)
+
+    sourceIcon.src = "./icons/horneando.svg"
+    source.appendChild(sourceIcon)
+    links.appendChild(source)
+
+    //Classes
+    div.classList.add('recipeFeed__recipe')
+    title.classList.add('recipeFeed__title')
+    thumbnail.classList.add('recipeFeed__thumbnail')
+    category.classList.add('recipeFeed__category')
+    description.classList.add('recipeFeed__description')
+    itemList.classList.add('recipeFeed__items')
+    links.classList.add('recipeFeed__links')
+    youtube.classList.add('recipeFeed__link-youtube')
+    source.classList.add('recipeFeed__links-source')
+
+    //Append to the main div
     div.appendChild(title)
+    div.appendChild(thumbnail)
+    div.appendChild(category)
     div.appendChild(description)
-    div.appendChild(ingredientsList)
-    div.appendChild(measureList)
+    div.appendChild(itemList)
+    div.appendChild(links)
 
     recipeFeed.append(div)
 }
 
-
-
-recipeBtn.addEventListener('click', async () => {
+const init = async () => {
     let recipe = {};
+    recipeTip.style.display = "none"
     await fetch(URL)
     .then(response =>{ return response.json()})
     .then(response => {
         recipe = response.meals[0]
     })
+    recipeFeed.removeChild(recipeFeed.children[0])
     showRecipe(recipe)
-    recipeFeed.removeChild(recipeFeed.childNodes[0])
-    console.log(recipe)
-})
+}
+
+
+recipeBtn.addEventListener('click', init)
